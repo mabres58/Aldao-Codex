@@ -1,142 +1,128 @@
-# Aldao Metalúrgica — demo completa (fase 6)
+# Aldao Metalúrgica — Panel de solicitudes
 
-## 1. Qué es este proyecto
+Aplicación para gestionar solicitudes de licencia/día libre, equipo de seguridad y horas extra.
 
-Panel interno de demostración para Aldao Metalúrgica, empresa familiar de servicios metalúrgicos e industriales de Paysandú, Uruguay. Centraliza solicitudes de licencia/día libre, equipo de seguridad y horas extra, permite aprobar o rechazar y advierte coincidencias de ausencias. React + TypeScript + Tailwind CSS + Vite + localStorage. No hay backend ni autenticación real.
+Los empleados crean solicitudes y consultan sus estados. Administración puede aprobarlas o rechazarlas y consultar el historial. Las solicitudes resueltas no pueden volver a cambiar de estado.
 
-Rutas: /empresa (información pública), /login (acceso simulado), /empleado (solicitudes propias) y /admin (gestión de solicitudes). La raíz y rutas desconocidas remiten a /empresa.
+Incluye una página informativa del negocio, filtros, contadores y avisos de coincidencia de licencias.
 
-## 2. Ejecución local
+## Arrancar el proyecto
 
-Requiere Node.js 22.18+ y npm. Desde la carpeta del proyecto:
+Requisitos: Node.js 22.18 o superior y npm.
 
-~~~sh
+Desde la carpeta del proyecto:
+
+```bash
 npm install
 npm run dev
-~~~
+```
 
-Abrir http://127.0.0.1:5173/login. Vite puede elegir otro puerto si está ocupado: usá la URL que informa la terminal. Para detener el servidor, Ctrl+C.
+Abrí la dirección que muestre la terminal, normalmente http://localhost:5173.
 
-~~~sh
-npm run lint
-npm test
-~~~
+Comandos disponibles:
 
-La verificación automática actual contiene 14 pruebas, que se ejecutan con npm test. Las comprobaciones de interfaz se realizaron en el entorno local de desarrollo.
+```bash
+npm run lint     # Revisión de código
+npm test         # Pruebas automáticas
+npm run build    # Comprobación TypeScript y compilación de producción
+npm run preview  # Vista local del build generado
+```
 
-## 3. Compilación para producción
+El build se genera en `dist/`. El alojamiento debe redirigir las rutas de la aplicación a `index.html` para permitir la navegación directa y las recargas.
 
-~~~sh
-npm run build
-npm run preview
-~~~
+## Acceso de prueba
 
-build ejecuta TypeScript y genera el sitio en dist/. preview sirve ese resultado, normalmente en http://127.0.0.1:4173/login. Es una vista local del build, no una publicación ni un servidor de producción.
-
-El hosting debe servir index.html como fallback para rutas SPA (/login, /empleado, /admin, /empresa). No se necesitan variables de entorno ni claves externas para esta demo. Los puertos 5173 y 4173 son orígenes distintos: tienen almacenamiento y sesiones separados.
-
-Carga inicial: placeholder HTML y React Suspense con “Cargando...”. Las rutas /empresa, /empleado y /admin se cargan de forma diferida; /login queda en el archivo inicial. Google Fonts usa display=swap y hay fuentes de respaldo. Sin fotografías ni iconografía de stock; los pocos iconos vectoriales de interfaz se cargan con la página informativa.
-
-Tamaño del build revisado: JS inicial 239,81 kB (75,67 kB gzip), CSS 23,50 kB (5,59 kB gzip), HTML 1,16 kB (0,66 kB gzip). Rutas diferidas: empresa 8,05 kB, empleado 6,87 kB, admin 13,69 kB y módulo compartido 2,27 kB, sin comprimir. Los tamaños gzip son estimaciones del build y no incluyen fuentes externas ni cabeceras HTTP. No se obtuvo Lighthouse ni una medición fiable de tiempo percibido/4G; no se certifica el objetivo de tres segundos.
-
-## 4. Claves de acceso de la demo
-
-- Empleado: empleado123. En el mismo formulario se selecciona el empleado en un desplegable y luego se ingresa la clave. Al pulsar Ingresar se abre directamente su panel.
-- Administración: admin123.
-
-Se centralizan en src/lib/config.ts, constante ROLE_PASSWORDS. Para cambiarlas, editá esos valores. Volvé a compilar si distribuís dist/.
-
-Las rutas tienen guardas de rol e identidad, exclusivamente en el cliente. La selección de identidad no brinda privacidad real.
-
-La sesión usa aldao_session con { rol, employeeId, timestamp }. Cada pestaña carga al iniciar la última sesión persistida y después conserva su propia sesión en memoria. El cambio/cierre en otra pestaña no expulsa a la primera. Una recarga completa recupera la última sesión guardada por cualquier pestaña; no existe persistencia independiente de roles por pestaña tras recargar.
-
-## 5. Datos ficticios y su reemplazo
-
-Todo el contenido es de demostración:
-
-- 8 empleados ficticios y sus áreas, en src/lib/seed.ts.
-- 12 solicitudes semilla del mismo archivo: 8 Pendiente, 2 Aprobada, 2 Rechazada. Las licencias de Federico Larrosa y Camila Deain coinciden en fecha y área.
-- Ubicación “Ruta 3 Km 185, Paysandú, Uruguay” y enlaces de Instagram/Facebook @aldaometalurgica, en src/lib/business.ts. Destinos sociales no verificados.
-- Descripción, servicios y cifras de ejemplo (+20 años y +30 personas), en src/pages/EmpresaPage.tsx. Kodarvia debe confirmar los contenidos definitivos.
-
-Para reemplazar las semillas, editá seed.ts y usá un perfil de navegador nuevo para verificar las nuevas semillas sin sobrescribir cambios existentes. Editar las semillas no sobrescribe datos que ya existen en el navegador.
-
-Modelos en src/types/index.ts: Empleado, Solicitud y Sesion. Se conservaron sus formatos y claves. Solicitud usa UUID, employeeId, tipo, detalle, fecha, estado, fechaCreacion y fechaResolucion. Las nuevas nacen Pendiente, con detalle recortado, fechaCreacion ISO actual y fechaResolucion=null. El detalle requiere al menos cinco caracteres después de trim; se permiten fechas pasadas y contenido repetido.
-
-Claves JSON de localStorage:
-
-| Clave | Contenido |
+| Rol | Clave |
 | --- | --- |
-| aldao_employees | Empleado[] |
-| aldao_requests | Solicitud[] |
-| aldao_anchor_date | Timestamp numérico del primera inicialización |
-| aldao_seeded_at | Fecha/hora ISO de siembra |
-| aldao_session | Sesión de demo |
+| Empleado | `empleado123` |
+| Administración | `admin123` |
 
-Las fechas semilla se anclan una sola vez y se calculan en UTC con días de 86400000 ms. Sus campos de creación/resolución conservan YYYY-MM-DD; los registros nuevos usan timestamp ISO. Cada colección se siembra únicamente si falta, incluso una colección vacía se conserva.
+En el acceso de empleado también se selecciona uno de los nombres precargados.
 
-## 6. Datos locales y verificación
+Las claves están en `ROLE_PASSWORDS`, dentro de `src/lib/config.ts`. Después de cambiarlas, hay que volver a generar el build si se utiliza la carpeta `dist/`.
 
-La interfaz no muestra avisos de demostración, claves de ejemplo ni etiquetas de datos ficticios. Las limitaciones y el carácter de demostración quedan documentados en este README.
+Estas claves y la selección de empleado son un mecanismo de demostración, no autenticación segura.
 
-Se retiraron la sección Configuración de demo, el simulador de bloqueo y la función/botón de reinicio. Este cambio no elimina ni modifica los datos ya guardados. La inicialización de semillas continúa solo cuando faltan colecciones.
+## Pantallas y archivos principales
 
-Un fallo real de almacenamiento mantiene el aviso operativo y una escritura local posterior exitosa lo retira. Las pruebas de almacenamiento conservan sus mecanismos internos, sin controles en la interfaz.
+- `/empresa`: información pública del negocio, ubicación y redes.
+- `/login`: acceso por rol.
+- `/empleado`: formulario y solicitudes del empleado seleccionado.
+- `/admin`: revisión de solicitudes, filtros, contadores e historial.
 
-Solo con npm run dev se pueden inspeccionar estados de arranque:
-- /empresa?demoDelay=5000 permite observar “Cargando...”.
-- /login?demoStorage=unavailable fuerza el estado de almacenamiento inaccesible, con enlace a la página informativa.
-Quitar los parámetros y recargar restaura el funcionamiento normal. No se habilitan en el build de producción ni se persisten.
+Archivos:
 
-## 7. Limitaciones de seguridad (IMPORTANTE)
+- `src/pages/`: pantallas de la aplicación.
+- `src/components/`: componentes de interfaz.
+- `src/lib/config.ts`: claves de acceso.
+- `src/lib/business.ts`: ubicación y enlaces del negocio.
+- `src/lib/seed.ts`: empleados y solicitudes iniciales.
+- `src/lib/`: persistencia, sesión, validaciones y sincronización.
+- `src/types/index.ts`: modelos de datos.
+- `tests/`: pruebas automáticas.
 
-Esta aplicación NO tiene autenticación real ni backend. Las claves son conocidas por cualquiera, los datos viven en el navegador del usuario (localStorage), no hay cifrado, no hay validación de servidor, y cualquier persona con acceso al dispositivo puede ver o modificar los datos mediante las herramientas de desarrollador. Esta demo NO debe usarse en producción ni con datos reales de empleados sin que Kodarvia implemente backend, autenticación real, RLS/permisos de servidor y cumplimiento normativo (ej. protección de datos personales) correspondientes.
+## Datos de ejemplo y cómo reemplazarlos
 
-Los datos no se comparten entre dispositivos ni perfiles. Borrar almacenamiento borra las solicitudes. Ninguna guarda de cliente protege frente a una persona que edite el código o los datos locales.
+La aplicación precarga 8 empleados ficticios y 12 solicitudes: 8 pendientes, 2 aprobadas y 2 rechazadas.
 
-## 8. Pendiente para producción (Kodarvia)
+Para cambiar los empleados y solicitudes iniciales, editá `src/lib/seed.ts`, manteniendo la relación entre los identificadores de empleados y sus solicitudes.
 
-- Backend real y base de datos persistente en servidor.
-- Autenticación real, RLS y permisos validados en servidor.
-- Dominio propio y puesta en producción.
-- Contenidos legales definitivos: términos y privacidad.
-- Datos reales de contacto, ubicación y redes sociales.
-- Revisión de cumplimiento normativo uruguayo de protección de datos.
-- Medición de rendimiento bajo 4G y revisión final en dispositivos físicos.
+Los ejemplos se cargan cuando faltan sus colecciones en el navegador. Editar el archivo de semillas no sustituye datos ya guardados.
 
-## 9. Estructura del proyecto
+La ubicación y los enlaces sociales son datos de muestra configurados en `src/lib/business.ts`. Los textos de presentación están en `src/pages/EmpresaPage.tsx`.
 
-~~~text
-src/
-  types/                 Modelos TypeScript
-  lib/                   Configuración, storage, semillas, sesiones, validaciones y sincronización
-  components/
-    layout/              Header y PageShell
-    LoadingState.tsx     Estado de carga de rutas
-    StartupUnavailable.tsx  Aviso de arranque degradado
-  pages/                 Empresa, Login, Empleado y Administración
-tests/                   Pruebas de persistencia, sesión, solicitudes, administración y arranque
-~~~
+## Reiniciar los datos de ejemplo
 
-## Sincronización y consistencia
+Esta acción elimina las solicitudes y los cambios realizados durante las pruebas.
 
-Un listener global del evento nativo storage observa aldao_requests y aldao_employees, además de clear(). useRequestsSync relee datos y actualiza listados, indicadores y bandejas. La pestaña de origen actualiza React al guardar; no se emiten eventos artificiales.
+En las herramientas de desarrollo del navegador:
 
-Coincidencias: licencias de empleados distintos, misma fecha y estados Pendiente o Aprobada; misma área es alta prioridad. Se consideran también registros ocultos por filtros y nunca se bloquea la decisión.
+1. Abrí Aplicación o Almacenamiento → Local Storage.
+2. Seleccioná la dirección desde la que estás ejecutando la aplicación.
+3. Eliminá únicamente estas entradas:
 
-Los filtros se combinan con AND sobre ambas listas; los indicadores muestran totales globales. Pendientes se ordenan por fecha solicitada ascendente e historial por fechaResolucion descendente.
+   - `aldao_employees`
+   - `aldao_requests`
+   - `aldao_anchor_date`
+   - `aldao_seeded_at`
+   - `aldao_session`
 
-Antes de resolver se relee storage. Un id ya resuelto no vuelve a escribirse; hay ids en vuelo y cancelación por desmontaje. Creación y resolución usan Web Locks si está disponible. Sin esa API se mantiene protección por id dentro de la pestaña y relectura optimista, sin garantizar atomicidad entre procesos.
+4. Cerrá las demás pestañas de esta aplicación y recargá la pestaña actual.
 
-## Publicación y acceso para Kodarvia — PENDIENTES
+Se volverán a cargar los empleados y las solicitudes iniciales. No es necesario borrar todo el almacenamiento del navegador.
 
-Repositorio del proyecto: https://github.com/mabres58/Aldao-Codex.
+## Qué está simulado
 
-La aplicación no está desplegada en una URL pública ni conectada a Lovable. No se envió email ni se concedió acceso a partners@kodarvia.com. Las URLs de previsualización de este README son locales. Las capturas de pruebas y demás archivos generados se excluyen del repositorio mediante .gitignore.
+- Los empleados y las solicitudes iniciales son ficticios.
+- La identidad del empleado se selecciona manualmente.
+- Las claves están incluidas en el código del navegador.
+- Crear solicitudes y aprobarlas o rechazarlas modifica únicamente localStorage.
+- Aprobar una solicitud no registra una licencia real, no gestiona inventario ni realiza operaciones de nómina.
+- No se envían correos, mensajes de WhatsApp ni notificaciones.
+- No hay backend, cuentas individuales ni conexiones con sistemas externos de negocio.
+- La ubicación y los perfiles sociales no están verificados y deben sustituirse por los definitivos.
 
-Pasos para entregar:
-1. Usar el repositorio indicado para mantener el código, package.json, package-lock.json, configuración, tests y documentación. Dependencias, builds, capturas, configuración local y secretos quedan excluidos según .gitignore.
-2. Conceder acceso al equipo de Kodarvia mediante su cuenta u organización confirmada. Coordinar la identidad del destinatario de partners@kodarvia.com; mencionar la dirección no concede acceso automáticamente.
-3. Importar el repositorio en el entorno Lovable autorizado si ese es el flujo de entrega elegido, o configurar un hosting estático compatible: instalación npm ci, build npm run build, salida dist y fallback SPA a index.html.
-4. Verificar las rutas y el checklist sobre la URL pública resultante, que tendrá su propio localStorage. Añadir esa URL al README y compartirla con Kodarvia mediante el canal acordado.
-5. Conservar esta documentación de seguridad y completar los pendientes de producción antes de usar datos reales. No contactar directamente al cliente.
+Kodarvia realizará la integración del backend, la autenticación y los permisos de servidor.
+
+## Persistencia y sesiones
+
+Los datos se conservan al recargar o cerrar y volver a abrir el navegador, mientras no se elimine su almacenamiento.
+
+Cada navegador y origen mantiene sus propios datos. No hay sincronización entre dispositivos. Las direcciones locales, previews y publicaciones tienen almacenamientos separados.
+
+Los cambios en solicitudes se reflejan entre pestañas del mismo origen sin recargar ni borrar un formulario empezado.
+
+La sesión se guarda en `aldao_session`. Cada pestaña mantiene su sesión en memoria mientras está abierta, pero al recargar recupera la última sesión guardada, que puede proceder de otra pestaña. Los roles no permanecen independientes por pestaña después de una recarga.
+
+Si el almacenamiento no está disponible, la aplicación muestra un aviso. localStorage no proporciona las garantías de una base de datos con transacciones.
+
+## Reglas de funcionamiento
+
+- Toda solicitud nueva nace pendiente.
+- Solo el rol de administración puede aprobar o rechazar desde el flujo de la aplicación.
+- Una solicitud resuelta no puede resolverse nuevamente.
+- Los filtros se combinan y los contadores muestran totales globales.
+- Los avisos de coincidencia identifican licencias de empleados distintos para la misma fecha; no bloquean su aprobación.
+
+Las restricciones de rol se aplican en el frontend y no protegen frente a modificaciones manuales del código o del almacenamiento.
+
