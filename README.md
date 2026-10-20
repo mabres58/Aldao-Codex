@@ -30,6 +30,14 @@ npm run preview  # Vista local del build generado
 
 El build se genera en `dist/`. El alojamiento debe redirigir las rutas de la aplicación a `index.html` para permitir la navegación directa y las recargas.
 
+### Preparación para Vercel (sin desplegar)
+
+El archivo `vercel.json` configura el framework Vite, el comando `npm run build` y la salida `dist`. La regla `rewrites` sirve `/index.html` para las rutas de la SPA, permitiendo abrir o recargar directamente `/empresa`, `/login`, `/empleado` y `/admin`. Los archivos estáticos existentes se sirven normalmente. Las guardas de sesión siguen activas: abrir una ruta protegida sin sesión lleva al login.
+
+Cuando se autorice el despliegue, importar este repositorio en Vercel y usar la raíz del proyecto. No se requieren variables de entorno para la aplicación actual. La configuración local `.vercel/` queda excluida de Git. Esta preparación no crea un proyecto en Vercel ni realiza un despliegue.
+
+Referencia: [Vite en Vercel](https://vercel.com/docs/frameworks/frontend/vite).
+
 ## Acceso de prueba
 
 | Rol | Clave |
@@ -125,4 +133,3 @@ Si el almacenamiento no está disponible, la aplicación muestra un aviso. local
 - Los avisos de coincidencia identifican licencias de empleados distintos para la misma fecha; no bloquean su aprobación.
 
 Las restricciones de rol se aplican en el frontend y no protegen frente a modificaciones manuales del código o del almacenamiento.
-

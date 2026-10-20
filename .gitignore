@@ -4,6 +4,7 @@ dist/
 build/
 coverage/
 .vite/
+.vercel/
 .npm-cache/
 *.tsbuildinfo
 *.log
