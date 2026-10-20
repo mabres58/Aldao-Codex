@@ -1,0 +1,3 @@
+export function StartupUnavailable() {
+  return <section className="mx-auto flex min-h-[65vh] max-w-2xl flex-col justify-center px-5 py-12 text-center"><p className="eyebrow justify-center text-muted">ALDAO METALÚRGICA</p><h1 className="mt-5 font-display text-4xl uppercase">No pudimos iniciar el panel.</h1><p className="mt-6 text-sm leading-7 text-muted">No se pudo iniciar el panel porque tu navegador está bloqueando el almacenamiento local. Revisá los permisos o probá con otro navegador.</p><a href={`/empresa${window.location.search}`} className="button mx-auto mt-8 max-w-full justify-center">Ver información de la empresa</a></section>;
+}

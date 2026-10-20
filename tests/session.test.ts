@@ -1,0 +1,32 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { seedIfEmpty } from '../src/lib/storage.ts';
+import { readSession, readSavedSession, startSession, endSession, SESSION_KEY } from '../src/lib/session.ts';
+const data = new Map<string,string>();
+Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:(key:string)=>data.get(key) ?? null,setItem:(key:string,value:string)=>data.set(key,value),removeItem:(key:string)=>data.delete(key)}});
+test('sesiones persistidas, identidades válidas, roles y cierre',()=>{
+  seedIfEmpty();
+  assert.equal(readSession(),null);
+  const timestamp = new Date().toISOString();
+  assert.equal(startSession({rol:'empleado',employeeId:'e2',timestamp}).ok,true);
+  assert.deepEqual(readSession(),{rol:'empleado',employeeId:'e2',timestamp});
+  assert.equal(JSON.parse(data.get(SESSION_KEY)!).employeeId,'e2');
+  data.set(SESSION_KEY,JSON.stringify({rol:'empleado',employeeId:'missing',timestamp}));
+  assert.equal(readSavedSession(),null);
+  assert.equal(readSession()?.employeeId,'e2');
+  data.set(SESSION_KEY,JSON.stringify({rol:'admin',employeeId:'e1',timestamp}));
+  assert.equal(readSavedSession(),null);
+  data.set(SESSION_KEY,JSON.stringify({rol:'admin',employeeId:null,timestamp:'bad'}));
+  assert.equal(readSavedSession(),null);
+  startSession({rol:'admin',employeeId:null,timestamp});
+  assert.equal(readSession()?.rol,'admin');
+  assert.equal(endSession().ok,true);
+  assert.equal(data.has(SESSION_KEY),false);
+  assert.equal(readSession(),null);
+});
+test('fallo de storage no inicia sesión y se comunica al cerrar',()=>{
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,get(){throw new Error('Bloqueado');}});
+  assert.equal(startSession({rol:'admin',employeeId:null,timestamp:new Date().toISOString()}).ok,false);
+  assert.equal(readSession(),null);
+  assert.equal(endSession().ok,false);
+});

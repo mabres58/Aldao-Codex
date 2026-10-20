@@ -1,0 +1,36 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { seedIfEmpty, getAnchorDate, getItem, setItem, STORAGE_KEYS, getStorageStatus } from '../src/lib/storage.ts';
+import type { Solicitud } from '../src/types/index.ts';
+const memory = new Map<string,string>();
+Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:(key:string)=>memory.get(key) ?? null,setItem:(key:string,value:string)=>memory.set(key,value)}});
+test('siembra exacta, fechas ancladas, conservación de cambios y recuperación parcial',()=>{
+  assert.deepEqual(seedIfEmpty(),{ok:true,value:true});
+  const first = new Map(memory);
+  assert.equal(JSON.parse(memory.get(STORAGE_KEYS.employees)!).length,8);
+  const requests: Solicitud[] = JSON.parse(memory.get(STORAGE_KEYS.requests)!);
+  assert.equal(requests.length,12);
+  assert.equal(requests.filter(row=>row.estado==='Pendiente').length,8);
+  assert.equal(requests[6].fecha,requests[7].fecha);
+  assert.deepEqual(seedIfEmpty(),{ok:true,value:false});
+  assert.deepEqual(memory,first);
+  const anchor = getAnchorDate();
+  requests[0].detalle = 'Cambio conservado';
+  assert.equal(setItem(STORAGE_KEYS.requests,requests).ok,true);
+  memory.delete(STORAGE_KEYS.employees);
+  assert.equal(seedIfEmpty().ok,true);
+  assert.equal(JSON.parse(memory.get(STORAGE_KEYS.requests)!)[0].detalle,'Cambio conservado');
+  assert.deepEqual(getAnchorDate(),anchor);
+  setItem(STORAGE_KEYS.requests,[]);
+  seedIfEmpty();
+  assert.deepEqual(getItem(STORAGE_KEYS.requests),{ok:true,value:[]});
+});
+test('JSON corrupto y almacenamiento bloqueado devuelven fallo sin lanzar ni simular guardado',()=>{
+  memory.set('invalid','{broken');
+  assert.equal(getItem('invalid').ok,false);
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,get(){throw new Error('Bloqueado');}});
+  assert.equal(getItem('any').ok,false);
+  assert.equal(setItem('any',[]).ok,false);
+  assert.equal(seedIfEmpty().ok,false);
+  assert.equal(getStorageStatus(),'error');
+});

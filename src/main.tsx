@@ -1,0 +1,12 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+import { seedIfEmpty, simulateStartupUnavailable, startStorageSync, subscribeData } from './lib/storage';
+import { refreshSession } from './lib/session';
+import './styles.css';
+if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('demoStorage') === 'unavailable') simulateStartupUnavailable(true);
+const initialization = seedIfEmpty();
+const stopSync = startStorageSync();
+const stopSessionData = subscribeData(refreshSession);
+if (import.meta.hot) import.meta.hot.dispose(() => {stopSync();stopSessionData();});
+createRoot(document.getElementById('root')!).render(<StrictMode><App initialized={initialization.ok}/></StrictMode>);
